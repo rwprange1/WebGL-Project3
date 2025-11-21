@@ -8,27 +8,42 @@
 precision mediump float;
 
 
-attribute vec3 vPosition;
-
+attribute vec4 vPosition;
+attribute vec4 vNorm;
 
 
 uniform mat4 uCamera;
 uniform mat4 uPerspectiveMatrix;
 uniform mat4 uTransMat;
 
-
-
-
+uniform vec4 uRotQuat;
 varying vec4 fColor;
 
-void main() {
-    gl_PointSize = 3.0;
-    fColor = vec4( vPosition.yxz, 1.0);
-   
-    
+/**
+    the format for a quat vec4 (scale, vec3)
+    function multiplies two quaternions
+*/
+vec4 multq(vec4 a, vec4 b){
+    return vec4(a.x * b.x - dot(a.yzw, b.yzw),
+        cross(a.yzw, b.yzw) + a.yzw *  b.x  + b.yzw * a.x    
+    );
+}
 
-    vec4 newPos = vec4(vPosition, 1.0);
-    gl_Position =    uTransMat *uPerspectiveMatrix * uCamera  * newPos  ; 
+
+vec4 rotateq(vec4 q, vec4 r){
+    vec4 inv_r = vec4(r.x, -r.yzw);;
+    vec4 m1 = multq(r, q);
+    return multq(m1, inv_r);
+
+}
+
+void main() {
+    vec4 p = vec4(0.0, vPosition.xyz);
+    p = rotateq(p, uRotQuat);
+    vec4 newPos = vec4(p.yzw, 1.0);
+    gl_PointSize = 3.0;
+    fColor = vec4(vNorm.yxz, 1.0);
+    gl_Position =    uPerspectiveMatrix * uCamera  * newPos; 
     
 }
 </script>
@@ -52,9 +67,13 @@ void main() {
 <!--Changed file path-->
 <script type="text/javascript" src="common_files/utils.js"></script>
 <script type="text/javascript" src="main.js"></script>
-<script type="text/javascript" src="mat_vec.js"></script>
+<script type="text/javascript" src="MV.js"></script>
 <script type="text/javascript" src="Camera.js"></script>
-<script type="text/javascript" src="teapot.js"></script>
+<script type="text/javascript" src="./createTeapotData.js"></script>
+<script type="text/javascript" src="./patches.js"></script>
+<script type="text/javascript" src="./vertices.js"></script>
+<script type="text/javascript" src="Quaternion.js"></script>
+
 <link rel="stylesheet" href="style.css">
 </head>   
 
@@ -67,24 +86,50 @@ void main() {
             <div id="cameraPos" ></div>
         </div>
         <div class="column">
-            <h1>Window Width (.1 - 30.0)
-                <h2 id="Width-Slider-Value">Current: 2 </h2>
-                <input type="range" value="2" min=".1" max="30.0" class="slider" step=".25" id="width-slider" />
+            <h1>Control Panel</h1>
 
-            </h1>
+            <h2 style="text-align: left ;">Light Source Position</h2>
+            <div class="light">
+                
 
-            <h1>Window Height (.1 - 30.0)
-                <h2 id="Height-Slider-Value">Current: 2 </h2>
-                <input type="range" value="2" min=".1" max="30.0" class="slider" step=".25" id="height-slider" />
-            </h1>
+                <h1 style="display: flex; flex-direction: column;">
+                    X: (0.0 - 1.0)
+                    <input type="range" value=".5" min="0.0" max="1.0" class="slider" step=".25" id="light-x-slider" />
+                </h1>
 
-             <h1>Near Clipping Plane (.1 - 20)
-                <h2 id="Near-Slider-Value">Current: 1 </h2>
-                <input type="range" value="1" min=".1" max="20.0" class="slider" step=".1" id="near" />
-            </h1>
-            <h1>Far Clipping Plane (10 - 300)
-                <h2 id="Far-Slider-Value">Current: 200 </h2>
-                <input type="range"  min="10" max="300" value="200" step=".25" class="slider" id="far" />
+                <h1 style="display: flex; flex-direction: column;">
+                    Y: (0.0 - 1.0)
+                    <input type="range" value=".5" min="0.0" max="1.0" class="slider" step=".25" id="light-y-slider" />
+
+                </h1>
+
+                <h1 style="display: flex; flex-direction: column;">
+                    Z: (0.0 - 1.0)
+                    <input type="range" value=".5" min="0.0" max="1.0" class="slider" step=".25" id="light-z-slider" />
+                </h1>
+            </div>
+            
+
+            <h2 style="text-align: left ;">Light Properties</h2>
+            <div class="light">
+                
+
+                <h1 style="display: flex; flex-direction: column;">
+                    Light Intensity (Diffuse): (1.0 - 5.0)
+                    <input type="range" value=".5" min="1.0" max="5.0" class="slider" step=".25" id="light-x-slider" />
+                </h1>
+
+                <h1 style="display: flex; flex-direction: column;">
+                    Light Intensity (Specular): (1.0 - 5.0)
+                    <input type="range" value=".5" min="1.0" max="5.0" class="slider" step=".25" id="light-x-slider" />
+                </h1>
+
+               
+            </div>
+
+
+
+           
 
             </h1>
             <h1>

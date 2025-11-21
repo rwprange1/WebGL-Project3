@@ -11,13 +11,17 @@ var program;
 var canvas;
 var gl;
 
-var teapotIndexSet = [];
+// a 2-n matrix where [0] is vertex pos, [1] is vertex normals
+var teapot_geom;
 var dataBuffer;
 
 var camera; 
-var cameraPos = [0, 100., 100.0 ,1.0]; 
+var quaternion;
+
+var cameraPos = [0, 8., 8.0 ,1.0]; 
 var lookAtPoint = [0.0, 0.0, 0.0, 1.0]; 
 var up = [0.0, 1.0, 0.0, 1.0];
+
 var near = 1.0;
 var far = 200.0;
 var left = -1.0;
@@ -29,9 +33,9 @@ var topCam = 1.0;
 var isHeld = false;
 var prevPoint;
 var click;
-var transMat;
+var quatPointer;
 var camVelo = .005;
-
+var y =1;
 
 window.onload = function init(){
     canvas = document.getElementById("gl-canvas");
@@ -40,6 +44,8 @@ window.onload = function init(){
     if (!gl) {
         this.alert("WebGL isnt available");
     }
+
+
 
     program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
@@ -50,10 +56,14 @@ window.onload = function init(){
     gl.viewport(0,0,canvas.width, canvas.height);
     gl.clearColor(1.,.5,.25,1.0);
 
-    let transMatPointer = gl.getUniformLocation(program, "uTransMat");
-    transMat = mat4()
-    gl.uniformMatrix4fv(transMatPointer, false, matToFloat32Array(transpose(transMat)))
-    
+
+
+    quaternion = new Quaternion([0.0, 0.0, 0.0], 1);
+    quatPointer = gl.getUniformLocation(program, "uRotQuat");
+    gl.uniform4fv(quatPointer, quaternion.toVec4());
+
+
+  
 
     buildBuffers();
     buildCamera();
@@ -68,8 +78,18 @@ window.onload = function init(){
  * This function loads in the teapot and the index buffer to the gpu
  */
 function buildBuffers(){
-    let data = matToFloat32Array(teapot_vertices);
-    teapotIndexSet = teapot_indices;
+
+
+    // generate hte teapot model
+	teapot_geom = createTeapotGeometry(6);
+	
+	
+
+    let vals = [...teapot_geom[0]];
+    vals.push(...teapot_geom[1]);
+
+    let data = matToFloat32Array(vals);
+    
     
     
     dataBuffer = gl.createBuffer();
@@ -77,18 +97,29 @@ function buildBuffers(){
     gl.bufferData(gl.ARRAY_BUFFER,
         data,
         gl.STATIC_DRAW
-    )
-
-    indexBuffer = gl.createBuffer(); 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    
-    gl.bufferData(
-        gl.ELEMENT_ARRAY_BUFFER,
-        new Uint16Array(teapotIndexSet),
-        gl.STATIC_DRAW
     );
+
+    bindBuffer();
+
+    
 }
 
+
+/**
+ * Tell webgl the positions of the attributes in the GLbuffer 
+ */
+function bindBuffer(){
+    gl.bindBuffer(gl.ARRAY_BUFFER,  dataBuffer);
+    let vPosition = gl.getAttribLocation(program, "vPosition");
+    gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosition);
+
+    let vNorm = gl.getAttribLocation(program, "vNorm");
+    
+
+    gl.vertexAttribPointer(vNorm, 4, gl.FLOAT, false, 0, 16*teapot_geom[0].length); // each element is a vec4f, 4 4 byte floats
+    gl.enableVertexAttribArray(vNorm);
+}
 
 
 /**
@@ -98,16 +129,13 @@ function render() {
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
-    gl.bindBuffer(gl.ARRAY_BUFFER,  dataBuffer);
-    let vPosition = gl.getAttribLocation(program, "vPosition");
-    gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vPosition);
-    gl.drawElements(gl.TRIANGLES, teapotIndexSet.length, gl.UNSIGNED_SHORT, 0);
+    
+    gl.drawArrays(gl.TRIANGLES, 0,teapot_geom[0].length );
  
     
     // sleep for 100 ms
     setTimeout(
-		function (){requestAnimFrame(render);}, 100
+		function (){requestAnimFrame(render);}, 60
     );
     
 }
@@ -146,18 +174,7 @@ function updateCameraUniforms(){
  */
 
 function initHTMLEventListeners(){
-    // get the html elements
-    let heightSliderOut = document.getElementById("Height-Slider-Value");
-    let widthSliderOut = document.getElementById("Width-Slider-Value");
-    let nearSliderOut = document.getElementById("Near-Slider-Value");
-    let farSliderOut = document.getElementById("Far-Slider-Value");
     
-
-    let heightSliderIn =  document.getElementById("height-slider");
-    let widthSliderIn = document.getElementById("width-slider");
-   
-    let nearSliderIn = document.getElementById("near");
-    let farSliderIn = document.getElementById("far");
 
 
     let resetButton = document.getElementById("reset");
@@ -165,125 +182,37 @@ function initHTMLEventListeners(){
         reset(heightSliderOut, widthSliderOut, nearSliderOut, farSliderOut);
     })
 
-    /**
-     * When the height slider is changed we will retain 
-     * symmetry and rebuild our perspective matrix, then update the html value
-     */
-    heightSliderIn.oninput = function (){
-        let value = parseFloat(this.value)/2;
-        topCam = value;
-        bottom = -1 * value;
-        heightSliderOut.innerHTML = ("Current: " + value);
-        updateCameraUniforms();
-    }
+   
+   
 
-    /**
-     * When the width slider is changed we will retain 
-     * symmetry and rebuild our perspective matrix, then update the html value
-     */
-    widthSliderIn.oninput = function (){
-        let value = parseFloat(this.value)/2;
-        right = value;
-        left = -1 * value;
 
-        widthSliderOut.innerHTML = ("Current: " + value);
-        updateCameraUniforms();
-    }
     
-    /**
-     * When the the near slider is changed, we update the html element and near global and 
-     * rebuild the perspective matrix
-     */
-    nearSliderIn.oninput = function (){
-        near = parseFloat(nearSliderIn.value);
-       
-    
-      
-        
-        nearSliderOut.innerHTML = ("Current: " + near);
-        updateCameraUniforms();
-    }
-
-      /**
-     * When the the far slider is changed, we update the html element and far global and 
-     * rebuild the perspective matrix
-     */
-    farSliderIn.oninput = function (){
-        far = parseFloat(farSliderIn.value);
-
-
-        
-        farSliderOut.innerHTML = ("Current: " + far);
-        updateCameraUniforms();
-    }
-
-    let cameraSpeed = 2;
-
-    // this defines how to move our camera, and how to reset the camera/world
-    this.document.addEventListener("keydown", (event) =>{
-            switch (event.code) {
-                case "KeyW":
-                    cameraPos =  vector_add(cameraPos, vector_scale(camera.lookAtDirection, -1 *cameraSpeed));
-                    break;
-                case "KeyA": {
-                    let norm = normalize(cross_product(camera.lookAtDirection, camera.V));
-                    norm.push(0.0);
-                    cameraPos = vector_add(cameraPos, vector_scale (norm, cameraSpeed));
-                    break;
-                }
-                case "KeyD": {
-                     
-                    let norm = normalize(cross_product(camera.lookAtDirection, camera.V));
-                    norm.push(0.0);
-
-                    cameraPos = vector_sub(cameraPos, vector_scale (norm, cameraSpeed));
-                    break;
-                }
-                case "KeyS":
-                    cameraPos =  vector_add(cameraPos, vector_scale(camera.lookAtDirection, cameraSpeed));
-                    break;  
-                case "KeyR":
-                    reset(heightSliderOut, widthSliderOut, nearSliderOut, farSliderOut);
-                    break;
-                case "Space":
-                    cameraPos[1] += camera.V[1];
-                   
-                    break;
-                case "ShiftLeft":
-                    cameraPos[1] -= camera.V[1];
-                    break; 
-                default:
-                    return;       
-
-            }
-            // if we encounter any camera changes we need to rebuild it
-            buildCamera()
-
-        });
-
-
-
-    let transMatPointer = gl.getUniformLocation(program, "uTransMat");
     canvas.addEventListener("mousemove", (event) => {
-        if(!isHeld || click === null)
-            return; 
+        if (!isHeld || click === null) return; 
         
 
         if (prevPoint === undefined || prevPoint === null){
             
             let localCoords = getMousePosition(event)
-            prevPoint = [localCoords[0], localCoords[1], 0.0 , 0.0];
+            prevPoint = [localCoords[0], findY(localCoords[0], localCoords[1]) , localCoords[1]];
             return;
         }
 
         if(click === 0 ){
-            // pan x,y
+            
             let localCoords = getMousePosition(event)
-            let val = [localCoords[0], localCoords[1], 0.0 , 0.0];
-            transMat[0][3] += val[0] - prevPoint[0];
-            transMat[1][3] += val[1] - prevPoint[1];
-            gl.uniformMatrix4fv(transMatPointer, false, matToFloat32Array(transpose(transMat)))
+            let val = [localCoords[0], findY(localCoords[0], localCoords[1]), localCoords[1]];
+            
+            let quat = normalize(cross(val, prevPoint));
+            
+
+            quaternion = quaternion.rotate(length(quat),  quat);;
+            console.log(quaternion);
+            console.log(quaternion.toVec4());
+            gl.uniform4fv(quatPointer, quaternion.toVec4());
+            
             prevPoint = val;
+          
 
         }else if (click === 1){ 
             // zoom in/out
@@ -291,9 +220,9 @@ function initHTMLEventListeners(){
             let val = [localCoords[0], localCoords[1], 0.0 , 0.0];
 
             if (val[1] - prevPoint[1] > 0){
-                cameraPos =  vector_add(cameraPos, vector_scale(camera.lookAtDirection, -2));
+                cameraPos =  add(cameraPos, vector_scale(camera.lookAtDirection, -2));
             }else{
-                cameraPos =  vector_add(cameraPos, vector_scale(camera.lookAtDirection, 2));
+                cameraPos =  add(cameraPos, vector_scale(camera.lookAtDirection, 2));
             }
             buildCamera()
             prevPoint = val;

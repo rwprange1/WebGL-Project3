@@ -13,3 +13,9 @@
         text-align: center;
         border-radius: 15px;
     }
+
+    .light{
+        display: flex;
+        font-size: x-small ;
+        justify-content: space-around;
+    }

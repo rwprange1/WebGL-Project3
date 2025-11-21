@@ -73,14 +73,14 @@ Camera.prototype.lookAt = function(){
 
 // x or camera right axis
 Camera.prototype.calculateU = function(){
-    this.U = normalize(cross_product(this.lookAtDirection, this.up));
+    this.U = normalize(cross(this.lookAtDirection, this.up));
     this.U.push(0.0);
    
 }
 
 // y or camera up axis
 Camera.prototype.calculateV = function(){
-    this.V = normalize(cross_product( this.U, this.lookAtDirection));
+    this.V = normalize(cross( this.U, this.lookAtDirection));
     this.V.push(0.0);
     
 }
