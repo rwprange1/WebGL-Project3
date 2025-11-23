@@ -18,7 +18,7 @@ var dataBuffer;
 var camera; 
 var quaternion;
 
-var cameraPos = [0, 8., 8.0 ,1.0]; 
+var cameraPos = [0, 5., 10.0 ,1.0]; 
 var lookAtPoint = [0.0, 0.0, 0.0, 1.0]; 
 var up = [0.0, 1.0, 0.0, 1.0];
 
@@ -200,11 +200,11 @@ function initHTMLEventListeners(){
             let localCoords = getMousePosition(event)
             let val = findY(localCoords[0], localCoords[1]);
 
-            console.log(val);
+            
 
             let axis = cross(val, prevPoint);
             axis = normalize(axis);
-            let theta = length(axis)/100;
+            let theta = length(axis)/150;
             
     
             let cos = Math.cos(theta);

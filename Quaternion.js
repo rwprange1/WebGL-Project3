@@ -95,7 +95,7 @@ function findY(x,z){
     let d = (x*x) + (z*z);
 
     let v = [];
-    v[0] = x;
+    v[0] = -x;
     v[1] = z;
 
 
