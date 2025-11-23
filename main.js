@@ -58,9 +58,9 @@ window.onload = function init(){
 
 
 
-    quaternion = new Quaternion([0.0, 0.0, 0.0], 1);
+    quaternion = [1.0, 0.0, 0.0, 0.0];
     quatPointer = gl.getUniformLocation(program, "uRotQuat");
-    gl.uniform4fv(quatPointer, quaternion.toVec4());
+    gl.uniform4fv(quatPointer, quaternion);
 
 
   
@@ -174,12 +174,9 @@ function updateCameraUniforms(){
  */
 
 function initHTMLEventListeners(){
-    
-
-
     let resetButton = document.getElementById("reset");
     resetButton.addEventListener("click", () => {
-        reset(heightSliderOut, widthSliderOut, nearSliderOut, farSliderOut);
+        reset();
     })
 
    
@@ -194,23 +191,22 @@ function initHTMLEventListeners(){
         if (prevPoint === undefined || prevPoint === null){
             
             let localCoords = getMousePosition(event)
-            prevPoint = [localCoords[0], findY(localCoords[0], localCoords[1]) , localCoords[1]];
+            prevPoint = [localCoords[0], -findY(localCoords[0], localCoords[1]) , localCoords[1]];
             return;
         }
 
         if(click === 0 ){
             
             let localCoords = getMousePosition(event)
-            let val = [localCoords[0], findY(localCoords[0], localCoords[1]), localCoords[1]];
+            let val = [localCoords[0], -findY(localCoords[0], localCoords[1]), localCoords[1]];
             
-            let quat = normalize(cross(val, prevPoint));
-            
+            let axis = cross(val, prevPoint);
+            console.log()
 
-            quaternion = quaternion.rotate(length(quat),  quat);;
-            console.log(quaternion);
-            console.log(quaternion.toVec4());
-            gl.uniform4fv(quatPointer, quaternion.toVec4());
+
+            quaternion = rotateQuat(quaternion, length(axis),  axis);;
             
+            gl.uniform4fv(quatPointer, quaternion);
             prevPoint = val;
           
 

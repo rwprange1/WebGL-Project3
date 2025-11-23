@@ -1,51 +1,95 @@
+
+
+
+function addQuat(q1, q2){
+    if (q1.length != 4 || q2.length != 4){
+        return `Invalid quaternion addition, length must be 4. q1: ${q1.length}, q2: ${q2.length}`;
+    } 
+
+    let vec = vector_add(q1.slice(1), q2.slice(1))
+    return [q1[0] + q2[0], vec[0], vec[1], vec[2]];
+}
+
+function quatScale(q1, val){
+    return vector_scale(q1, val);
+}
+
+
+
 /**
- * 
- * @param {*} vec 
- * @param {*} scale
+ * Multiply q1 by q2
+ * @param {*} q1  a quat [s, x,y,z]
+ * @param {*} q2  a quat [s, x, y ,z]
  */
-function Quaternion(vec, scalar){
-    this.vec = vec;
-    this.scalar = scalar;
+function multQuat(q1, q2){ 
+    if (q1.length != 4 || q2.length != 4){
+        return `Invalid quaternion multiplication, length must be 4. q1: ${q1.length}, q2: ${q2.length}`;
+    } 
+
+    let s1 = q1[0];
+    let s2 = q2[0];
+
+    let v1 = [q1[1], q1[2], q1[3]];
+    let v2 = [q2[1], q2[2], q2[3]];
+
+    let p1 = vector_add(vector_scale(v1,s2), vector_scale(v2, s1));
+    let vec = vector_add(p1, cross_product(v1,v2));
+
+    return [s1*s2 - dot(v1,v2), vec[0], vec[1], vec[2]];
+
 }
 
-Quaternion.prototype.mult = function(q){
-
-    let s1 = this.scalar;
-    let v1 = this.vec;
-
-    let s2 = q.scalar;
-    let v2 = q.vec;
+/**
+ * This function will rotate a quat q1 about an arbitrary axis axis (vec3)
+ * @param {float} q1 the quat to rotate
+ * @param {float} theta  the angle of rot
+ * @param {number[]}} axis  the axis of rot
+ * @returns the rotated quat
+ */
+function rotateQuat(q1, theta, axis){
+    theta = theta/2;
+    axis = normalize(axis);
     
-    let scalar = s1 * s2 - dot(v1, v2);
+    let cos = Math.cos(theta);
+    let sin = Math.sin(theta);
 
-    let vec3 = vector_add(vector_scale(v2, s1), vector_scale(v1, s2));
-    console.log(vec3)
-    let vec = [
-       vector_add(vec3, cross_product(v1, v2))
-    ];
-    return new Quaternion(vec, scalar);
-};
+    axis = vector_scale(axis, sin);
+
+    let r =  [cos, axis[0], axis[1], axis[2]];
+    let rInv = unitInv(r);
+
+    return multQuat(multQuat(r,q1), rInv);
+    
+}
+
+function quatMagnitude(q1){
+    let vec = q1.slice(1);
+    return dot(vec, vec);
+}
+
+/**
+ * Find the inverse of a quat, (1, 0, 0, 0) is the identity quat
+ * @param {*} q1 
+ */
+function quatInv(q1){
+    let val = 1/quatMagnitude(q1);
+    q1[1] *= -1;
+    q1[2] *= -1;
+    q1[3] *= -1;
+    return quatScale(q1, val);
+}
 
 
-Quaternion.prototype.rotate = function(theta, vec){
+function unitInv(q1){
 
-    let rot = new Quaternion(
-        vector_scale(vec, Math.sin(theta/2)),
-        Math.cos(theta/2.)
-    );
-
-    console.log(rot, "rot mat")
-    let ret = this.mult(rot);
-
-    console.log("rotate" ,  ret)
-    return ret;
+    q1[1] *= -1;
+    q1[2] *= -1;
+    q1[3] *= -1;
+    return q1;
 
 }
 
-Quaternion.prototype.toVec4 = function(){
-    return [this.scalar, this.vec[0], this.vec[1], this.vec[2]];
-}
 
-function findY(x, z){
-    return Math.sqrt(1-(x*x) - (z*z));
+function findY(x,z){
+    return Math.sqrt(1 - (x*x) - z*z);
 }
