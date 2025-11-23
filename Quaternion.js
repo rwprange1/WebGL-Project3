@@ -91,5 +91,23 @@ function unitInv(q1){
 
 
 function findY(x,z){
-    return Math.sqrt(1 - (x*x) - z*z);
+    
+    let d = (x*x) + (z*z);
+
+    let v = [];
+    v[0] = x;
+    v[1] = z;
+
+
+    if (d < 1.0){
+        v[2] =  Math.sqrt(1.0 - d);
+    }else{
+        let a = 1.0/ Math.sqrt(d);
+        v[2] = 0.0;
+        v[0] *= a;
+        v[1] *= a;
+        
+    }
+
+    return v;
 }

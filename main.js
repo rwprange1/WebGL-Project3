@@ -191,21 +191,29 @@ function initHTMLEventListeners(){
         if (prevPoint === undefined || prevPoint === null){
             
             let localCoords = getMousePosition(event)
-            prevPoint = [localCoords[0], -findY(localCoords[0], localCoords[1]) , localCoords[1]];
+            prevPoint = findY(localCoords[0], localCoords[1]);
             return;
         }
 
         if(click === 0 ){
             
             let localCoords = getMousePosition(event)
-            let val = [localCoords[0], -findY(localCoords[0], localCoords[1]), localCoords[1]];
-            
+            let val = findY(localCoords[0], localCoords[1]);
+
+            console.log(val);
+
             let axis = cross(val, prevPoint);
-            console.log()
-
-
-            quaternion = rotateQuat(quaternion, length(axis),  axis);;
+            axis = normalize(axis);
+            let theta = length(axis)/100;
             
+    
+            let cos = Math.cos(theta);
+            let sin = Math.sin(theta);
+
+            axis = vector_scale(axis, sin);
+            let rotation = [cos, axis[0], axis[1], axis[2]];
+            
+            quaternion = multQuat(quaternion, rotation);
             gl.uniform4fv(quatPointer, quaternion);
             prevPoint = val;
           
