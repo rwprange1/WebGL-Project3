@@ -390,7 +390,11 @@ function normalize( u, excludeLastComponent ) {
     
     var len = length( u );
 
-    if ( !isFinite(len) ) {
+    if (len === 0){
+        return u;
+    }
+
+    if ( !isFinite(len)) {
         throw "normalize: vector " + u + " has zero length";
     }
     
