@@ -22,20 +22,34 @@ var cameraPos = [0, 6., 10.0 ,1.0];
 var lookAtPoint = [0.0, 0.0, 0.0, 1.0]; 
 var up = [0.0, 1.0, 0.0, 1.0];
 
+
+var shininess = 8.0;
+
+var lightPos = [0, 6., 10.0 ,1.0];
+var lightAmbient = [.2,.2,.2,1.];
+var lightDiffuse = [.7,.7,.7,1.];
+var lightSpecular = [1. , 1., 1., 1.];
+
+var materialAmbient = [1.0 , 1.0, 1.0, 1.0];
+var materialDiffuse = [.25, .36, .2, 1.];
+var materialSpecular = [.8, .77, .77, 1.0];
+
+
+
 var near = 1.0;
-var far = 200.0;
-var left = -1.0;
-var right = 1.0;
-var bottom = -1.0;
-var topCam = 1.0;
+var far = 50.;
+var left = -.65;
+var right = .65;
+var bottom = -.65;
+var topCam = .65;
 
 
 var isHeld = false;
 var prevPoint;
 var click;
 var quatPointer;
-var camVelo = .005;
-var y =1;
+
+
 
 window.onload = function init(){
     canvas = document.getElementById("gl-canvas");
@@ -62,15 +76,50 @@ window.onload = function init(){
     quatPointer = gl.getUniformLocation(program, "uRotQuat");
     gl.uniform4fv(quatPointer, quaternion);
 
-
-  
-
     buildBuffers();
     buildCamera();
+    calculateLight();
+
     initHTMLEventListeners();
     render();
 }
 
+
+
+function calculateLight(){
+    let ambientProduct = cross(lightAmbient, materialAmbient);
+    let diffuseProduct = cross(lightDiffuse, materialDiffuse);
+    let specularProduct = cross(lightSpecular, materialSpecular);
+
+    ambientProduct.push(1.0);
+    diffuseProduct.push(1.0);
+    specularProduct.push(1.0);
+
+    console.log("amb", ambientProduct);
+    console.log("diff", diffuseProduct);
+    console.log("spec", specularProduct);
+    
+    let ambPointer = gl.getUniformLocation(program, "ambientProduct");
+    console.log(ambPointer)
+    gl.uniform4fv(ambPointer, ambientProduct);
+
+    let diffPointer = gl.getUniformLocation(program, "diffuseProduct");
+    console.log(diffPointer)
+    gl.uniform4fv(diffPointer, diffuseProduct);
+
+    let specularPointer = gl.getUniformLocation(program, "specularProduct");
+    console.log(specularPointer)
+    gl.uniform4fv(specularPointer, specularProduct);
+
+    let shininessPointer = gl.getUniformLocation(program, "shininess");
+    console.log(shininessPointer)
+    gl.uniform1f(shininessPointer, shininess);
+
+    let lightPosPointer = gl.getUniformLocation(program, "lightPos");
+    console.log(lightPosPointer)
+    gl.uniform4fv(lightPosPointer, lightPos);
+
+}
 
 
 
@@ -176,6 +225,16 @@ function initHTMLEventListeners(){
     })
 
    
+    document.addEventListener("keypress", (event)=>{
+        if (event.key === "w") {
+            lightPos[0] -= .25;
+        }
+
+        if(event.key === "s"){
+            lightPos[0] += .25;
+        }
+        calculateLight();
+    })
    
 
 
@@ -183,9 +242,7 @@ function initHTMLEventListeners(){
     canvas.addEventListener("mousemove", (event) => {
         if (!isHeld || click === null) return; 
         
-
         if (prevPoint === undefined || prevPoint === null){
-            
             let localCoords = getMousePosition(event)
             prevPoint = findY(localCoords[0], localCoords[1]);
             return;
@@ -195,16 +252,12 @@ function initHTMLEventListeners(){
             let localCoords = getMousePosition(event)
             let val = findY(localCoords[0], localCoords[1]);
             
-    
-
             let axis = cross(val, prevPoint);
-            
             
             axis = normalize(axis);
             
             let theta = length(axis)/150;
             
-    
             let cos = Math.cos(theta);
             let sin = Math.sin(theta);
 
@@ -214,7 +267,6 @@ function initHTMLEventListeners(){
             quaternion = multQuat(quaternion, rotation);
             gl.uniform4fv(quatPointer, quaternion);
             prevPoint = val;
-          
 
         }else if (click === 1){ 
             // zoom in/out
@@ -247,55 +299,31 @@ function initHTMLEventListeners(){
 
 /**
  * A simple helper function to reset the world and camera view and position
- *  @param heightSliderOut: this is a reference to the HTML height slider
- *  @param widthSliderOut: this is a reference to the HTML height slider
- *  @param nearSliderOut: this is a reference to the HTML height slider
- *  @param farSliderOut: this is a reference to the HTML height slider
  */
 function reset(){
-
-    console.log("reset")
-    let heightSliderOut = document.getElementById("Height-Slider-Value");
-    let widthSliderOut = document.getElementById("Width-Slider-Value");
-    let nearSliderOut = document.getElementById("Near-Slider-Value");
-    let farSliderOut = document.getElementById("Far-Slider-Value");
+    console.log("reset");
     
-
-    let heightSliderIn =  document.getElementById("height-slider");
-    let widthSliderIn = document.getElementById("width-slider");
-   
-    let nearSliderIn = document.getElementById("near");
-    let farSliderIn = document.getElementById("far");
-
-
-
-
-    
-    cameraPos = [0, 100., 100.0 ,1.0]; 
+    cameraPos = [0, 6., 10.0 ,1.0]; 
     lookAtPoint = [0.0, 0.0, 0.0, 1.0]; 
     up = [0.0, 1.0, 0.0, 1.0];
-    near = 1.0;
-    far = 200.0;
-    left = -1.0;
-    right = 1.0;
-    bottom = -1.0;
-    topCam = 1.0;
 
-   
+    shininess = 4.0;
     
-    heightSliderIn.value = 2*topCam;
-    widthSliderIn.value = 2*right;
-    nearSliderIn.value = near;
-    farSliderIn.value = far;
+    lightPos = [-58., -60,, 100.0, 1.0];
+    lightAmbient = [.2,.2,.2,1.];
+    lightDiffuse = [.7,.7,.7,1.];
+    lightSpecular = [1. , 1., 1., 1.];
 
-    widthSliderOut.innerHTML = ("Current: " + 2*right);
-    heightSliderOut.innerHTML = ("Current: " + 2*topCam);
-    farSliderOut.innerHTML = ("Current: " + far);
-    nearSliderOut.innerHTML = ("Current: " + near);
+    materialAmbient = [1.0 , 1.0, 1.0, 1.0];
+    materialDiffuse = [.25, .36, .2, 1.];
+    materialSpecular = [.8, .77, .77, 1.0];
 
-    let transMatPointer = gl.getUniformLocation(program, "uTransMat");
-    transMat = mat4();
-    gl.uniformMatrix4fv(transMatPointer, false, matToFloat32Array(transpose(transMat)));
+    near = 1.0;
+    far = 50.;
+    left = -.65;
+    right = .65;
+    bottom = -.65;
+    topCam = .65;
     buildCamera();
 }
     
