@@ -90,8 +90,6 @@ function buildBuffers(){
 
     let data = matToFloat32Array(vals);
     
-    
-    
     dataBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, dataBuffer);
     gl.bufferData(gl.ARRAY_BUFFER,
@@ -194,13 +192,13 @@ function initHTMLEventListeners(){
         }
 
         if(click === 0 ){
-            
             let localCoords = getMousePosition(event)
             let val = findY(localCoords[0], localCoords[1]);
-
             
+    
 
             let axis = cross(val, prevPoint);
+            
             
             axis = normalize(axis);
             
