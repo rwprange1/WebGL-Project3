@@ -18,7 +18,7 @@ var dataBuffer;
 var camera; 
 var quaternion;
 
-var cameraPos = [0, 5., 10.0 ,1.0]; 
+var cameraPos = [0, 6., 10.0 ,1.0]; 
 var lookAtPoint = [0.0, 0.0, 0.0, 1.0]; 
 var up = [0.0, 1.0, 0.0, 1.0];
 
@@ -132,11 +132,9 @@ function render() {
     
     gl.drawArrays(gl.TRIANGLES, 0,teapot_geom[0].length );
  
+    requestAnimFrame(render);
+
     
-    // sleep for 100 ms
-    setTimeout(
-		function (){requestAnimFrame(render);}, 60
-    );
     
 }
 
@@ -203,7 +201,9 @@ function initHTMLEventListeners(){
             
 
             let axis = cross(val, prevPoint);
+            
             axis = normalize(axis);
+            
             let theta = length(axis)/150;
             
     
