@@ -1,6 +1,15 @@
+/**
+ * This file defines and implements usefull and needed operations for quaternions
+ * @author Richard Prange
+ * @version 11/25/2025
+ */
 
-
-
+/**
+ * A function to add two quaternions
+ * @param {*} q1 a quaternion
+ * @param {*} q2 a quaternion
+ * @returns the sum of q1 and q2
+ */
 function addQuat(q1, q2){
     if (q1.length != 4 || q2.length != 4){
         return `Invalid quaternion addition, length must be 4. q1: ${q1.length}, q2: ${q2.length}`;
@@ -10,6 +19,12 @@ function addQuat(q1, q2){
     return [q1[0] + q2[0], vec[0], vec[1], vec[2]];
 }
 
+/**
+ * A sunction to scale the quaternion by a number
+ * @param {*} q1 the quaternion
+ * @param {*} val the value to scale by
+ * @returns quaternion q1 scaled by val
+ */
 function quatScale(q1, val){
     return vector_scale(q1, val);
 }
@@ -62,6 +77,11 @@ function rotateQuat(q1, theta, axis){
     
 }
 
+/**
+ * Gets the magnitude of the vector component of q1
+ * @param {*} q1 a quaternion
+ * @returns the magnitude of q1's vector component
+ */
 function quatMagnitude(q1){
     let vec = q1.slice(1);
     return dot(vec, vec);
@@ -79,9 +99,12 @@ function quatInv(q1){
     return quatScale(q1, val);
 }
 
-
+/**
+ * Given a unit quaternion return the inverse of it
+ * @param {*} q1 a quaternion
+ * @returns  the inverse of q1
+ */
 function unitInv(q1){
-
     q1[1] *= -1;
     q1[2] *= -1;
     q1[3] *= -1;
@@ -89,7 +112,12 @@ function unitInv(q1){
 
 }
 
-
+/**
+ * Find the the y point on a unit sphere
+ * @param {*} x  the x point
+ * @param {*} z  the z point
+ * @returns 
+ */
 function findY(x,z){
     
     let d = (x*x) + (z*z);

@@ -1,9 +1,19 @@
+/**
+ * This is the camera class, it defines the location and relevant matrices needed for 3d-2d viewing in
+ * webgl
+ * @author Richard Prange
+ * @version 11/25/2025
+ */
 
 
 
 
-
-
+/**
+ * The constructor for the camera object
+ * @param {*} location a vec4f of the location of the camera
+ * @param {*} lookAtPoint  a vec4f the point the camera will look at
+ * @param {*} up a vec4f rep of the point above us 
+ */
 function Camera(location, lookAtPoint, up){
     this.modelViewMatrix = mat4();
     this.projectionMatrix = mat4();
@@ -29,8 +39,6 @@ function Camera(location, lookAtPoint, up){
 
     this.calculateU();
     this.calculateV();
-
-
     this.lookAt();
 }
 
@@ -60,14 +68,7 @@ Camera.prototype.lookAt = function(){
 
 
     rotationMat = transpose(rotationMat);
-    
-    
-    
-    
     this.modelViewMatrix =matMult(rotationMat, MoveCamToOg); 
-
-   
-    
 }
 
 
@@ -88,9 +89,6 @@ Camera.prototype.calculateV = function(){
 
 
 
-
-
-
 Camera.prototype.ortho = function(left, right, bottom, top, near, far){
     let mat = mat4();
 
@@ -105,7 +103,6 @@ Camera.prototype.ortho = function(left, right, bottom, top, near, far){
 
     mat = transpose(mat);
     
-
     this.projectionMatrix = mat;
 }
 

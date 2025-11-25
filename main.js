@@ -1,18 +1,18 @@
 
 
 /**
- * This will be the main file for displaying a 3d teapot and the camera 
- * movement and updates
+ * This will be the main file for displaying a 3d teapot and the modification of its lighting properties.
+ * We also implement useful rotation of the teapot using quaternion rotations
  * @author Richard Prange
- * @version 11/7/2025
+ * @version 11/25/2025
  */
 
 var program;
 var canvas;
 var gl;
 
-// a 2-n matrix where [0] is vertex pos, [1] is vertex normals
-var teapot_geom;
+
+var numVertices;
 var dataBuffer;
 
 var camera; 
@@ -64,8 +64,6 @@ window.onload = function init(){
         this.alert("WebGL isnt available");
     }
 
-
-
     program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
 
@@ -73,9 +71,7 @@ window.onload = function init(){
     gl.enable(gl.DEPTH_TEST);
 
     gl.viewport(0,0,canvas.width, canvas.height);
-    gl.clearColor(1.,.5,.25,1.0);
-
-
+    gl.clearColor(0.0,0.0,0.0,1.0);
 
     quaternion = [1.0, 0.0, 0.0, 0.0];
     quatPointer = gl.getUniformLocation(program, "uRotQuat");
@@ -90,20 +86,16 @@ window.onload = function init(){
 }
 
 
-
+/**
+ * This function passes the needed lighting values to the vertex and fragment shaders
+ */
 function calculateLight(){
     let ambientProduct = mix(lightAmbient, materialAmbient, 1.0);
     let diffuseProduct = mix(lightDiffuse, materialDiffuse, diffuseIntensity);
     let specularProduct = mix(lightSpecular, materialSpecular, specularIntensity);
 
-    
-
-  
-
-    
-
     let colorPointer = gl.getUniformLocation(program, "uColor");
-    gl.uniform4fv(colorPointer, [.4, .4, .8, 1.0]);
+    gl.uniform4fv(colorPointer, [.7, .4, .4, 1.0]); // give the object a bit of a pink color
     
     let ambPointer = gl.getUniformLocation(program, "ambientProduct");
     gl.uniform4fv(ambPointer, ambientProduct);
@@ -115,12 +107,10 @@ function calculateLight(){
     gl.uniform4fv(specularPointer, specularProduct);
 
     let shininessPointer = gl.getUniformLocation(program, "shininess");
-    console.log(shininessPointer)
     gl.uniform1f(shininessPointer, shininess);
 
     lightPosPointer = gl.getUniformLocation(program, "lightPos");
     gl.uniform4fv(lightPosPointer, lightPos);
-
 
     let viewerPosPointer = gl.getUniformLocation(program, "viewerPos");
     gl.uniform4fv(viewerPosPointer, cameraPos);
@@ -133,10 +123,13 @@ function calculateLight(){
  */
 function buildBuffers(){
     // generate hte teapot model
-	teapot_geom = createTeapotGeometry(6);
-	
+	let teapot_geom = createTeapotGeometry(12);
+	numVertices = teapot_geom[0].length;
     let vals = [...teapot_geom[0]];
+    
     vals.push(...teapot_geom[1]);
+
+
 
     let data = matToFloat32Array(vals);
     
@@ -148,8 +141,6 @@ function buildBuffers(){
     );
 
     bindBuffer();
-
-    
 }
 
 
@@ -158,14 +149,13 @@ function buildBuffers(){
  */
 function bindBuffer(){
     gl.bindBuffer(gl.ARRAY_BUFFER,  dataBuffer);
+
     let vPosition = gl.getAttribLocation(program, "vPosition");
     gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
 
     let vNorm = gl.getAttribLocation(program, "vNorm");
-    console.log(vNorm);
-
-    gl.vertexAttribPointer(vNorm, 4, gl.FLOAT, false, 0, 16*teapot_geom[0].length); // each element is a vec4f, 4 4 byte floats
+    gl.vertexAttribPointer(vNorm, 4, gl.FLOAT, false, 0, 16*numVertices); // each element is a vec4f, 4 4 byte floats
     gl.enableVertexAttribArray(vNorm);
 }
 
@@ -174,16 +164,9 @@ function bindBuffer(){
  * This is the render loop, we clear the canvas and display the content and call render again
  */
 function render() {
-
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    
-    
-    gl.drawArrays(gl.TRIANGLES, 0,teapot_geom[0].length );
- 
+    gl.drawArrays(gl.TRIANGLES, 0, numVertices);
     requestAnimFrame(render);
-
-    
-    
 }
 
 /**
@@ -372,22 +355,20 @@ function initHTMLEventListeners(){
  * A simple helper function to reset the world and camera view and position
  */
 function reset(){
-    console.log("reset");
-    
+    diffuseIntensity = 2.0;
+    specularIntensity = 2.0;
+
+    lightAmbient = [1,1,1,1.];
+    lightDiffuse = [1,1,1,1.];
+    lightSpecular = [1. , 1., 1., 1.];
+
+    materialAmbient = [.4, 0, .2, 1.0];
+    materialDiffuse = [.4, 0, .4, 1.];
+    materialSpecular = [.4, .77, .77, 1.0];
+
     cameraPos = [0, 6., 10.0 ,1.0]; 
     lookAtPoint = [0.0, 0.0, 0.0, 1.0]; 
     up = [0.0, 1.0, 0.0, 1.0];
-
-    shininess = 4.0;
-    
-    lightPos = [-58., -60,, 100.0, 1.0];
-    lightAmbient = [.2,.2,.2,1.];
-    lightDiffuse = [.7,.7,.7,1.];
-    lightSpecular = [1. , 1., 1., 1.];
-
-    materialAmbient = [1.0 , 1.0, 1.0, 1.0];
-    materialDiffuse = [.25, .36, .2, 1.];
-    materialSpecular = [.8, .77, .77, 1.0];
 
     near = 1.0;
     far = 50.;
@@ -395,7 +376,12 @@ function reset(){
     right = .65;
     bottom = -.65;
     topCam = .65;
+
+    quaternion = [1.0, 0.0, 0.0, 0.0];
+    gl.uniform4fv(quatPointer, quaternion);
+
     buildCamera();
+    calculateLight();
 }
     
     
