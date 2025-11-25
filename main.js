@@ -23,16 +23,19 @@ var lookAtPoint = [0.0, 0.0, 0.0, 1.0];
 var up = [0.0, 1.0, 0.0, 1.0];
 
 
-var shininess = 32;
+var shininess = 16;
 
 var lightPos = [-58., -60.,  100.0,  1.0];
+var diffuseIntensity = 2.0;
+var specularIntensity = 2.0;
+
 var lightAmbient = [1,1,1,1.];
 var lightDiffuse = [1,1,1,1.];
 var lightSpecular = [1. , 1., 1., 1.];
 
-var materialAmbient = [.8, 0, .2, 1.0];
-var materialDiffuse = [.8, 0, .4, 1.];
-var materialSpecular = [.8, .77, .77, 1.0];
+var materialAmbient = [.4, 0, .2, 1.0];
+var materialDiffuse = [.4, 0, .4, 1.];
+var materialSpecular = [.4, .77, .77, 1.0];
 
 
 
@@ -49,7 +52,9 @@ var prevPoint;
 var click;
 var quatPointer;
 
-
+var diffPointer;
+var specularPointer;
+var lightPosPointer;
 
 window.onload = function init(){
     canvas = document.getElementById("gl-canvas");
@@ -87,36 +92,33 @@ window.onload = function init(){
 
 
 function calculateLight(){
-    let ambientProduct = cross(lightAmbient, materialAmbient);
-    let diffuseProduct = cross(lightDiffuse, materialDiffuse);
-    let specularProduct = cross(lightSpecular, materialSpecular);
+    let ambientProduct = mix(lightAmbient, materialAmbient, 1.0);
+    let diffuseProduct = mix(lightDiffuse, materialDiffuse, diffuseIntensity);
+    let specularProduct = mix(lightSpecular, materialSpecular, specularIntensity);
 
-    ambientProduct.push(1.0);
-    diffuseProduct.push(1.0);
-    specularProduct.push(1.0);
+    
 
-    console.log("amb", ambientProduct);
-    console.log("diff", diffuseProduct);
-    console.log("spec", specularProduct);
+  
+
+    
+
+    let colorPointer = gl.getUniformLocation(program, "uColor");
+    gl.uniform4fv(colorPointer, [.4, .4, .8, 1.0]);
     
     let ambPointer = gl.getUniformLocation(program, "ambientProduct");
-    console.log(ambPointer)
     gl.uniform4fv(ambPointer, ambientProduct);
 
-    let diffPointer = gl.getUniformLocation(program, "diffuseProduct");
-    console.log(diffPointer)
+    diffPointer = gl.getUniformLocation(program, "diffuseProduct");
     gl.uniform4fv(diffPointer, diffuseProduct);
 
-    let specularPointer = gl.getUniformLocation(program, "specularProduct");
-    console.log(specularPointer)
+    specularPointer = gl.getUniformLocation(program, "specularProduct");
     gl.uniform4fv(specularPointer, specularProduct);
 
     let shininessPointer = gl.getUniformLocation(program, "shininess");
     console.log(shininessPointer)
     gl.uniform1f(shininessPointer, shininess);
 
-    let lightPosPointer = gl.getUniformLocation(program, "lightPos");
-    console.log(lightPosPointer)
+    lightPosPointer = gl.getUniformLocation(program, "lightPos");
     gl.uniform4fv(lightPosPointer, lightPos);
 
 
@@ -130,13 +132,9 @@ function calculateLight(){
  * This function loads in the teapot and the index buffer to the gpu
  */
 function buildBuffers(){
-
-
     // generate hte teapot model
 	teapot_geom = createTeapotGeometry(6);
 	
-	
-
     let vals = [...teapot_geom[0]];
     vals.push(...teapot_geom[1]);
 
@@ -225,22 +223,92 @@ function initHTMLEventListeners(){
     let resetButton = document.getElementById("reset");
     resetButton.addEventListener("click", () => {
         reset();
-    })
+    });
 
+
+    let lightX = document.getElementById("light-x-slider");
+    let lightY = document.getElementById("light-y-slider");
+    let lightZ = document.getElementById("light-z-slider");
+
+    lightX.oninput = function(){
+        lightPos[0] += parseFloat(this.value);
+        let lightPosPointer = gl.getUniformLocation(program, "lightPos");
+        gl.uniform4fv(lightPosPointer, lightPos);
+    };
+
+    lightY.oninput = function(){
+        lightPos[1] += parseFloat(this.value);
+        let lightPosPointer = gl.getUniformLocation(program, "lightPos");
+        gl.uniform4fv(lightPosPointer, lightPos);
+    };
+
+    lightZ.oninput = function(){
+        lightPos[2] += parseFloat(this.value);
+        let lightPosPointer = gl.getUniformLocation(program, "lightPos");
+        gl.uniform4fv(lightPosPointer, lightPos);
+    };
+    
+    let specSlider = document.getElementById("spec-slider");
+    let diffSlider = document.getElementById("diffuse-slider");
+
+    specSlider.oninput = function(){
+        specularIntensity = parseFloat(this.value);
+        let specularProduct = mix(lightSpecular, materialSpecular, specularIntensity);
+        gl.uniform4fv(specularPointer, specularProduct);
+
+    };
+
+    diffSlider.oninput = function(){
+        diffuseIntensity = parseFloat(this.value);
+        let diffuseProduct = mix(lightDiffuse, materialDiffuse, diffuseIntensity);
+        gl.uniform4fv(diffPointer, diffuseProduct);
+    }
    
-    document.addEventListener("keypress", (event)=>{
-        if (event.key === "w") {
-            lightPos[0] -= .25;
-        }
 
-        if(event.key === "s"){
-            lightPos[0] += .25;
-        }
-        calculateLight();
-    })
-   
+    let specR = document.getElementById("spec-r-slider");
+    let specG = document.getElementById("spec-g-slider");
+    let specB = document.getElementById("spec-b-slider");
+
+    specR.oninput = function(){
+        lightSpecular[0] = parseFloat(this.value);
+        let specularProduct = mix(lightSpecular, materialSpecular, specularIntensity);
+        gl.uniform4fv(specularPointer, specularProduct);
+    };
+
+    specG.oninput = function(){
+        lightSpecular[1] = parseFloat(this.value);
+        let specularProduct = mix(lightSpecular, materialSpecular, specularIntensity);
+        gl.uniform4fv(specularPointer, specularProduct);
+    };
+
+    specB.oninput = function(){
+        lightSpecular[2] = parseFloat(this.value);
+        let specularProduct = mix(lightSpecular, materialSpecular, specularIntensity);
+        gl.uniform4fv(specularPointer, specularProduct);
+    };
 
 
+    let diffR = document.getElementById("diffuse-r-slider");
+    let diffG = document.getElementById("diffuse-g-slider");
+    let diffB = document.getElementById("diffuse-b-slider");
+
+    diffR.oninput = function(){
+        lightDiffuse[0] = parseFloat(this.value);
+        let diffuseProduct = mix(lightDiffuse, materialDiffuse, diffuseIntensity);
+        gl.uniform4fv(diffPointer, diffuseProduct);
+    };
+
+    diffG.oninput = function(){
+        lightDiffuse[1] = parseFloat(this.value);
+        let diffuseProduct = mix(lightDiffuse, materialDiffuse, diffuseIntensity);
+        gl.uniform4fv(diffPointer, diffuseProduct);
+    };
+
+    diffB.oninput = function(){
+        lightDiffuse[2] = parseFloat(this.value);
+        let diffuseProduct = mix(lightDiffuse, materialDiffuse, diffuseIntensity);
+        gl.uniform4fv(diffPointer, diffuseProduct);
+    };
     
     canvas.addEventListener("mousemove", (event) => {
         if (!isHeld || click === null) return; 

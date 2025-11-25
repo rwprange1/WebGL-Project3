@@ -63,7 +63,7 @@ void main() {
 precision mediump float;
 
 
-uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+uniform vec4 ambientProduct, diffuseProduct, specularProduct, uColor;
 uniform float shininess;
 
 
@@ -83,7 +83,7 @@ void main() {
     if (dot(L,N) < 0.0 ){
         specular = vec4(0.0, 0.0, 0.0, 1.0);
     }
-    fColor = (ambient + diffuse + specular);
+    fColor = (ambient + diffuse + specular) * uColor;
     fColor.a = 1.0;
     
    
@@ -125,18 +125,18 @@ void main() {
 
                 <h1 style="display: flex; flex-direction: column;">
                     X: (0.0 - 1.0)
-                    <input type="range" value=".5" min="0.0" max="1.0" class="slider" step=".25" id="light-x-slider" />
+                    <input type="range" value=".2" min="0.0" max="1.0" class="slider" step=".05" id="light-x-slider" />
                 </h1>
 
                 <h1 style="display: flex; flex-direction: column;">
                     Y: (0.0 - 1.0)
-                    <input type="range" value=".5" min="0.0" max="1.0" class="slider" step=".25" id="light-y-slider" />
+                    <input type="range" value=".2" min="0.0" max="1.0" class="slider" step=".05" id="light-y-slider" />
 
                 </h1>
 
                 <h1 style="display: flex; flex-direction: column;">
                     Z: (0.0 - 1.0)
-                    <input type="range" value=".5" min="0.0" max="1.0" class="slider" step=".25" id="light-z-slider" />
+                    <input type="range" value=".2" min="0.0" max="1.0" class="slider" step=".05" id="light-z-slider" />
                 </h1>
             </div>
             
@@ -147,16 +147,61 @@ void main() {
 
                 <h1 style="display: flex; flex-direction: column;">
                     Light Intensity (Diffuse): (1.0 - 5.0)
-                    <input type="range" value=".5" min="1.0" max="5.0" class="slider" step=".25" id="light-x-slider" />
+                    <input type="range" value=".5" min="1.0" max="5.0" class="slider" step=".25" id="diffuse-slider" />
                 </h1>
 
                 <h1 style="display: flex; flex-direction: column;">
                     Light Intensity (Specular): (1.0 - 5.0)
-                    <input type="range" value=".5" min="1.0" max="5.0" class="slider" step=".25" id="light-x-slider" />
+                    <input type="range" value=".5" min="1.0" max="5.0" class="slider" step=".25" id="spec-slider" />
                 </h1>
 
                
             </div>
+
+            <h2 style="text-align: left ;">Diffuse Reflectivity Constants</h2>
+            <div class="light">
+                
+
+                <h1 style="display: flex; flex-direction: column;">
+                    Red: (0.0 - 1.0)
+                    <input type="range" value=".5" min="1.0" max="5.0" class="slider" step=".25" id="diffuse-r-slider" />
+                </h1>
+
+                <h1 style="display: flex; flex-direction: column;">
+                    Green: (0.0 - 1.0)
+                    <input type="range" value=".5" min="1.0" max="5.0" class="slider" step=".25" id="diffuse-g-slider" />
+                </h1>
+
+                <h1 style="display: flex; flex-direction: column;">
+                    Blue: (0.0 - 1.0)
+                    <input type="range" value=".5" min="1.0" max="5.0" class="slider" step=".25" id="diffuse-b-slider" />
+                </h1>
+
+               
+            </div>
+
+              <h2 style="text-align: left ;">Specular Reflectivity Constants</h2>
+            <div class="light">
+                
+
+                <h1 style="display: flex; flex-direction: column;">
+                    Red: (0.0 - 1.0)
+                    <input type="range" value=".5" min="1.0" max="5.0" class="slider" step=".25" id="spec-r-slider" />
+                </h1>
+
+                <h1 style="display: flex; flex-direction: column;">
+                    Green: (0.0 - 1.0)
+                    <input type="range" value=".5" min="1.0" max="5.0" class="slider" step=".25" id="spec-g-slider" />
+                </h1>
+
+                <h1 style="display: flex; flex-direction: column;">
+                    Blue: (0.0 - 1.0)
+                    <input type="range" value=".5" min="1.0" max="5.0" class="slider" step=".25" id="spec-b-slider" />
+                </h1>
+
+               
+            </div>
+
 
 
 
