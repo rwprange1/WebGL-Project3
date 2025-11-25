@@ -23,15 +23,15 @@ var lookAtPoint = [0.0, 0.0, 0.0, 1.0];
 var up = [0.0, 1.0, 0.0, 1.0];
 
 
-var shininess = 8.0;
+var shininess = 32;
 
-var lightPos = [0, 6., 10.0 ,1.0];
-var lightAmbient = [.2,.2,.2,1.];
-var lightDiffuse = [.7,.7,.7,1.];
+var lightPos = [-58., -60.,  100.0,  1.0];
+var lightAmbient = [1,1,1,1.];
+var lightDiffuse = [1,1,1,1.];
 var lightSpecular = [1. , 1., 1., 1.];
 
-var materialAmbient = [1.0 , 1.0, 1.0, 1.0];
-var materialDiffuse = [.25, .36, .2, 1.];
+var materialAmbient = [.8, 0, .2, 1.0];
+var materialDiffuse = [.8, 0, .4, 1.];
 var materialSpecular = [.8, .77, .77, 1.0];
 
 
@@ -119,6 +119,9 @@ function calculateLight(){
     console.log(lightPosPointer)
     gl.uniform4fv(lightPosPointer, lightPos);
 
+
+    let viewerPosPointer = gl.getUniformLocation(program, "viewerPos");
+    gl.uniform4fv(viewerPosPointer, cameraPos);
 }
 
 
@@ -162,7 +165,7 @@ function bindBuffer(){
     gl.enableVertexAttribArray(vPosition);
 
     let vNorm = gl.getAttribLocation(program, "vNorm");
-    
+    console.log(vNorm);
 
     gl.vertexAttribPointer(vNorm, 4, gl.FLOAT, false, 0, 16*teapot_geom[0].length); // each element is a vec4f, 4 4 byte floats
     gl.enableVertexAttribArray(vNorm);

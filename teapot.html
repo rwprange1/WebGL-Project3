@@ -9,7 +9,7 @@ precision mediump float;
 
 attribute vec4 vPosition, vNorm;
 uniform mat4 uCamera,  uPerspectiveMatrix;
-uniform vec4 uRotQuat, lightPos;
+uniform vec4 uRotQuat, lightPos, viewerPos;
 
 varying vec3 N, L,E;
 
@@ -44,17 +44,16 @@ vec4 rotate(vec4 vPosition){
 void main() {
     gl_PointSize = 3.0;
     vec4 newPos = rotate(vPosition); // gets the rotationed position of the vertex
-    vec4 newLight = rotate(lightPos);
+    vec4 newNorm = rotate(vNorm);
 
-    vec3 pos = -(uCamera * newPos).xyz;
-    vec3 light = (newLight).xyz;
-    
-    L = normalize(light - pos);
-    E = -pos;
-    N = normalize((uCamera * vNorm).xyz);
-   
+    vec3 posEye = (uCamera * newPos).xyz;
+    vec3 lightEye = (uCamera * lightPos).xyz;
 
-    gl_Position =    uPerspectiveMatrix * uCamera  * newPos; 
+    L = normalize(lightEye - posEye);
+    N = normalize((mat3(uCamera) * newNorm.xyz));
+    E = (viewerPos.xyz - posEye);
+
+    gl_Position =  uPerspectiveMatrix * uCamera  * newPos; 
     
 }
 </script>
@@ -84,8 +83,10 @@ void main() {
     if (dot(L,N) < 0.0 ){
         specular = vec4(0.0, 0.0, 0.0, 1.0);
     }
-    fColor = ambient + diffuse + specular;
-    fColor.a = 1.0; 
+    fColor = (ambient + diffuse + specular);
+    fColor.a = 1.0;
+    
+   
     gl_FragColor = fColor;
 }
 
