@@ -214,19 +214,21 @@ function initHTMLEventListeners(){
     let lightZ = document.getElementById("light-z-slider");
 
     lightX.oninput = function(){
-        lightPos[0] += parseFloat(this.value);
+        lightPos[0] = parseFloat(this.value);
+        
         let lightPosPointer = gl.getUniformLocation(program, "lightPos");
         gl.uniform4fv(lightPosPointer, lightPos);
     };
 
     lightY.oninput = function(){
-        lightPos[1] += parseFloat(this.value);
+        lightPos[1] = parseFloat(this.value);
+        
         let lightPosPointer = gl.getUniformLocation(program, "lightPos");
         gl.uniform4fv(lightPosPointer, lightPos);
     };
 
     lightZ.oninput = function(){
-        lightPos[2] += parseFloat(this.value);
+        lightPos[2] = parseFloat(this.value);
         let lightPosPointer = gl.getUniformLocation(program, "lightPos");
         gl.uniform4fv(lightPosPointer, lightPos);
     };
@@ -358,6 +360,13 @@ function reset(){
     diffuseIntensity = 2.0;
     specularIntensity = 2.0;
 
+    let specSlider = document.getElementById("spec-slider");
+    let diffSlider = document.getElementById("diffuse-slider");
+
+
+    specSlider.value = specularIntensity;
+    diffSlider.value = diffuseIntensity;
+
     lightAmbient = [1,1,1,1.];
     lightDiffuse = [1,1,1,1.];
     lightSpecular = [1. , 1., 1., 1.];
@@ -365,6 +374,24 @@ function reset(){
     materialAmbient = [.4, 0, .2, 1.0];
     materialDiffuse = [.4, 0, .4, 1.];
     materialSpecular = [.4, .77, .77, 1.0];
+
+
+    let specR = document.getElementById("spec-r-slider");
+    let specG = document.getElementById("spec-g-slider");
+    let specB = document.getElementById("spec-b-slider");
+
+    specR.value = lightSpecular[0];
+    specG.value = lightSpecular[1];
+    specB.value = lightSpecular[2];
+
+
+    let diffR = document.getElementById("diffuse-r-slider");
+    let diffG = document.getElementById("diffuse-g-slider");
+    let diffB = document.getElementById("diffuse-b-slider");
+
+    diffR.value = lightDiffuse[0];
+    diffG.value = lightDiffuse[1];
+    diffB.value = lightDiffuse[2];
 
     cameraPos = [0, 6., 10.0 ,1.0]; 
     lookAtPoint = [0.0, 0.0, 0.0, 1.0]; 
@@ -375,7 +402,16 @@ function reset(){
     left = -.65;
     right = .65;
     bottom = -.65;
-    topCam = .65;
+    topCam = .65;   
+
+    lightPos = [-58., -60.,  100.0,  1.0];
+
+    let lightX = document.getElementById("light-x-slider");
+    lightX.value = lightPos[0];
+    let lightY = document.getElementById("light-y-slider");
+    lightY.value = lightPos[1];
+    let lightZ = document.getElementById("light-z-slider");
+    lightZ.value = lightPos[2];
 
     quaternion = [1.0, 0.0, 0.0, 0.0];
     gl.uniform4fv(quatPointer, quaternion);
